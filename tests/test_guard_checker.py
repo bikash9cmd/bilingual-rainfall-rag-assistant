@@ -36,6 +36,41 @@ def test_phone_numbers_and_emails_are_redacted():
     assert redact("my brother 9841234567 in Melamchi, mail a@b.com") == "my brother [phone] in Melamchi, mail [email]"
 
 
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        ("मेरो नम्बर ९८०१२३४५६७ हो", "मेरो नम्बर [phone] हो"),
+        ("call +९७७ ९८४१२३४५६७", "call [phone]"),
+        ("call +977-9841234567 now", "call [phone] now"),
+        ("9779841234567", "[phone]"),
+        ("call 984-1234567", "call [phone]"),
+        ("call 98412 34567", "call [phone]"),
+        ("९८४-१२३४५६७ मा फोन गर्नु", "[phone] मा फोन गर्नु"),
+        ("office 01-4412345", "office [phone]"),
+        ("धनकुटा ०२६-५२०१२३", "धनकुटा [phone]"),
+        ("uncle in UK +44 7911123456", "uncle in UK [phone]"),
+    ],
+)
+def test_phone_formats_people_actually_type_are_redacted(text, expected):
+    assert redact(text) == expected
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "How much rain fell in Kathmandu on 2024-09-28?",
+        "२०८१ असोज १२ गते काठमाडौंमा कति पानी पर्यो?",
+        "2081-06-12 मा पोखरा",
+        "Kathmandu Airport recorded 194.1 mm, 2.8 times the 1-in-100 level",
+        "Dhankuta monsoon total 2014 and 2015",
+        "station 1030 reported 98 mm on 12 days",
+        "९८ मिमि पानी १२ दिन",
+    ],
+)
+def test_dates_years_and_rainfall_figures_are_not_redacted(text):
+    assert redact(text) == text
+
+
 @pytest.fixture(scope="module")
 def flood_day(gold):
     return [tools.call(gold, "rain_on_day", {"place": "Kathmandu", "date": "2024-09-28", "calendar": "AD"})]

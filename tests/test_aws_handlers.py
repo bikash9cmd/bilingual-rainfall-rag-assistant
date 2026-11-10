@@ -51,6 +51,15 @@ def test_ask_logs_a_redacted_record_and_emits_metrics(aws, capsys):
     assert emf[0]["_aws"]["CloudWatchMetrics"][0]["Dimensions"] == [[]]
 
 
+def test_devanagari_phone_number_is_redacted_in_the_log(aws):
+    handlers, table = aws
+    q = "२०८१ असोज १२ गते काठमाडौंमा कति पानी पर्यो? दाइको नम्बर ९८४१२३४५६७"
+    body = json.loads(handlers.api(_event("POST /ask", {"question": q}), None)["body"])
+    item = table.get_item(Key={"id": body["id"]})["Item"]
+    assert "९८४१२३४५६७" not in item["question"] and "[phone]" in item["question"]
+    assert "२०८१ असोज १२" in item["question"]
+
+
 def test_feedback(aws):
     handlers, table = aws
     body = json.loads(handlers.api(_event("POST /ask", {"question": "Pokhara monsoon 2019"}), None)["body"])
