@@ -84,7 +84,17 @@ _INJECTION = [
     r"निर्देशन बिर्स",
 ]
 
-_PHONE = re.compile(r"(?:\+?977[-\s]?)?\b9[678]\d{8}\b|\+\d{1,3}[-\s]?\d{6,12}\b")
+# Digits as people type them: ASCII or Devanagari (Nepali keyboards produce ९८४१…).
+_D = "[0-9०-९]"
+_NINE, _SEVEN, _ZERO = "[9९]", "[7७]", "[0०]"
+_MOBILE = (
+    rf"(?:(?:\+|\b){_NINE}{_SEVEN}{_SEVEN}[-\s]?|\b)"  # optional +977 / 977 prefix
+    rf"{_NINE}[678६-८]{_D}"  # 96x / 97x / 98x
+    rf"(?:{_D}{{7}}|[-\s]{_D}{{7}}|{_D}{{2}}[-\s]{_D}{{5}})\b"  # 9841234567, 984-1234567, 98412 34567
+)
+_LANDLINE = rf"\b{_ZERO}{_D}{{1,2}}-{_D}{{6,7}}\b"  # 01-4412345, 061-523456
+_INTERNATIONAL = rf"\+{_D}{{1,3}}[-\s]?{_D}{{6,12}}\b"
+_PHONE = re.compile(f"{_MOBILE}|{_LANDLINE}|{_INTERNATIONAL}")
 _EMAIL = re.compile(r"\b[\w.+-]+@[\w-]+\.[\w.]+\b")
 
 
